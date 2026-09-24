@@ -466,55 +466,6 @@ tbody tr.new-row td{animation:rowflash .9s ease}
       <h2 style="font-size:1.1rem;font-weight:700">⚙️ Panel de Administración</h2>
     </div>
 
-    <!-- Firebase: sincronización EN TIEMPO REAL -->
-    <div class="admin-panel" style="border-color:var(--sup)">
-      <h3>⚡ Sincronización en tiempo real (Firebase)</h3>
-      <p style="color:var(--txt2);font-size:.83rem;margin-bottom:1rem;line-height:1.6">
-        Este es el motor que hace que los cambios se vean al instante entre dispositivos — Google Sheets nunca fue diseñado para eso (solo "responde cuando le preguntas"; Firebase "avisa" apenas algo cambia). Se configura <strong style="color:var(--txt)">una sola vez</strong>, y queda funcionando para todos los docentes automáticamente (igual que la URL de Sheets).
-      </p>
-      <ol style="color:var(--txt2);font-size:.8rem;line-height:1.9;margin:0 0 1rem 1.1rem">
-        <li>Entra a <a href="https://console.firebase.google.com" target="_blank" style="color:var(--acc2)">console.firebase.google.com</a> → Crear proyecto (gratis, sin tarjeta).</li>
-        <li>En el proyecto: <strong style="color:var(--txt)">Compilación → Realtime Database → Crear base de datos</strong> → elige una ubicación → empieza en <strong style="color:var(--txt)">modo de prueba</strong>.</li>
-        <li><strong style="color:var(--txt)">Configuración del proyecto</strong> (⚙️ arriba a la izq.) → pestaña "General" → sección "Tus apps" → ícono <strong style="color:var(--txt)">&lt;/&gt;</strong> (Web) → regístrala → copia el objeto <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">firebaseConfig</code> completo.</li>
-        <li>Pégalo tal cual abajo (el `{ ... }` completo) y toca "Guardar y probar".</li>
-      </ol>
-      <textarea id="firebase-config-input" rows="6" style="width:100%;font-family:ui-monospace,monospace;font-size:.78rem" placeholder='{"apiKey":"...","authDomain":"...","databaseURL":"https://TU-PROYECTO-default-rtdb.firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem;align-items:center">
-        <button class="btn sm grn" onclick="saveFirebaseConfigFromInput()">💾 Guardar y probar</button>
-        <button class="btn sm out" onclick="testFirebaseConnection()">📡 Probar conexión</button>
-        <button class="btn sm pur" onclick="importSheetsToFirebase()">📥 Importar datos actuales de Sheets a Firebase</button>
-      </div>
-      <div id="firebase-status" style="font-size:.8rem;margin-top:.7rem;min-height:1.2rem;white-space:pre-wrap;line-height:1.6"></div>
-    </div>
-
-    <!-- Conexión con Apps Script -->
-    <div class="admin-panel" style="border-color:var(--acc)">
-      <h3>🔗 Respaldo en Google Sheets (Apps Script) — opcional</h3>
-      <p style="color:var(--txt2);font-size:.83rem;margin-bottom:1rem;line-height:1.6">
-        Ya NO es el mecanismo de sincronización en vivo (eso lo hace Firebase, arriba) — esto queda como respaldo legible en una hoja de cálculo, bajo demanda (botón "Sync Sheets"). La URL "de fábrica" está en el código (<code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">DEFAULT_GAS_URL</code>).
-        Este campo solo guarda una URL alternativa <strong style="color:var(--txt)">en ESTE navegador</strong>, útil para probar un despliegue nuevo antes de publicarlo para todos.
-        Cuando confirmes que una URL nueva funciona, actualiza <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">DEFAULT_GAS_URL</code> en el código y vuelve a publicar el HTML — así todos los docentes quedan conectados sin tocar nada.
-      </p>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
-        <input type="text" id="gas-url-input" style="flex:1;min-width:280px" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
-        <button class="btn sm grn" onclick="saveGasUrl()">💾 Guardar y probar</button>
-        <button class="btn sm out" onclick="clearGasUrl()">🗑 Borrar</button>
-      </div>
-      <div id="gas-url-status" style="font-size:.8rem;margin-top:.7rem;min-height:1.2rem;white-space:pre-wrap;line-height:1.6"></div>
-
-      <div style="margin-top:1.1rem;border-top:1px solid var(--bord);padding-top:1rem">
-        <div style="font-size:.78rem;font-weight:700;color:var(--acc2);margin-bottom:.5rem">📄 Spreadsheet ID (solo si necesitas cambiarlo)</div>
-        <p style="color:var(--txt2);font-size:.8rem;margin-bottom:.7rem;line-height:1.6">
-          Si el Google Sheet actual se borró o cambió, pega aquí el ID del nuevo (la parte entre <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">/d/</code> y <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">/edit</code> en su URL). Esto actualiza el script directamente — no necesitas volver a editar código.
-        </p>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
-          <input type="text" id="sheet-id-input" style="flex:1;min-width:280px" placeholder="ID del Google Sheet">
-          <button class="btn sm pur" onclick="saveSheetId()">💾 Guardar Spreadsheet ID</button>
-        </div>
-        <div id="sheet-id-status" style="font-size:.8rem;margin-top:.7rem;min-height:1.2rem;white-space:pre-wrap;line-height:1.6"></div>
-      </div>
-    </div>
-
     <!-- Cargar JSON -->
     <div class="admin-panel">
       <h3>📥 Cargar datos desde JSON</h3>
@@ -586,6 +537,62 @@ tbody tr.new-row td{animation:rowflash .9s ease}
       <div id="admin-spaces-list"><div style="color:var(--txt2);font-size:.83rem">Cargando desde Sheets...</div></div>
       <button class="btn sm out" onclick="adminLoadSpaces()" style="margin-top:.8rem">🔄 Actualizar lista</button>
     </div>
+
+    <!-- Conexión avanzada (Firebase / Sheets) — colapsada: ya está
+         configurada de fábrica, esto es solo diagnóstico/reconfiguración -->
+    <details class="admin-panel" style="padding:0;border-color:var(--bord)">
+      <summary style="cursor:pointer;padding:1.1rem 1.4rem;font-size:.88rem;font-weight:700;color:var(--txt2);display:flex;align-items:center;gap:.5rem">🔌 Conexión avanzada (Firebase / Sheets) <span style="font-weight:400;font-size:.78rem">— ya configurada, normalmente no necesitas entrar aquí</span></summary>
+      <div style="padding:0 1.4rem 1.4rem;border-top:1px solid var(--bord)">
+
+        <div style="margin-top:1.2rem">
+          <h3 style="font-size:.9rem">⚡ Sincronización en tiempo real (Firebase)</h3>
+          <p style="color:var(--txt2);font-size:.83rem;margin-bottom:1rem;line-height:1.6">
+            Este es el motor que hace que los cambios se vean al instante entre dispositivos. <strong style="color:var(--txt)">Ya está configurado de fábrica</strong> (viene fijo en el código, igual que la URL de Sheets) — todos los docentes quedan conectados automáticamente sin tocar nada aquí. Usa esta sección solo para diagnosticar una falla de conexión o si alguna vez necesitas cambiar de proyecto de Firebase.
+          </p>
+          <ol style="color:var(--txt2);font-size:.8rem;line-height:1.9;margin:0 0 1rem 1.1rem">
+            <li>Entra a <a href="https://console.firebase.google.com" target="_blank" style="color:var(--acc2)">console.firebase.google.com</a> → Crear proyecto (gratis, sin tarjeta).</li>
+            <li>En el proyecto: <strong style="color:var(--txt)">Compilación → Realtime Database → Crear base de datos</strong> → elige una ubicación → empieza en <strong style="color:var(--txt)">modo de prueba</strong>.</li>
+            <li><strong style="color:var(--txt)">Configuración del proyecto</strong> (⚙️ arriba a la izq.) → pestaña "General" → sección "Tus apps" → ícono <strong style="color:var(--txt)">&lt;/&gt;</strong> (Web) → regístrala → copia el objeto <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">firebaseConfig</code> completo.</li>
+            <li>Pégalo tal cual abajo (el `{ ... }` completo) y toca "Guardar y probar".</li>
+          </ol>
+          <textarea id="firebase-config-input" rows="6" style="width:100%;font-family:ui-monospace,monospace;font-size:.78rem" placeholder='{"apiKey":"...","authDomain":"...","databaseURL":"https://TU-PROYECTO-default-rtdb.firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem;align-items:center">
+            <button class="btn sm grn" onclick="saveFirebaseConfigFromInput()">💾 Guardar y probar</button>
+            <button class="btn sm out" onclick="testFirebaseConnection()">📡 Probar conexión</button>
+            <button class="btn sm pur" onclick="importSheetsToFirebase()">📥 Importar datos actuales de Sheets a Firebase</button>
+          </div>
+          <div id="firebase-status" style="font-size:.8rem;margin-top:.7rem;min-height:1.2rem;white-space:pre-wrap;line-height:1.6"></div>
+        </div>
+
+        <div style="margin-top:1.6rem;border-top:1px solid var(--bord);padding-top:1.2rem">
+          <h3 style="font-size:.9rem">🔗 Respaldo en Google Sheets (Apps Script)</h3>
+          <p style="color:var(--txt2);font-size:.83rem;margin-bottom:1rem;line-height:1.6">
+            Ya NO es el mecanismo de sincronización en vivo (eso lo hace Firebase, arriba) — esto queda como respaldo legible en una hoja de cálculo, bajo demanda (botón "Sync Sheets"). La URL "de fábrica" está en el código (<code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">DEFAULT_GAS_URL</code>).
+            Este campo solo guarda una URL alternativa <strong style="color:var(--txt)">en ESTE navegador</strong>, útil para probar un despliegue nuevo antes de publicarlo para todos.
+            Cuando confirmes que una URL nueva funciona, actualiza <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">DEFAULT_GAS_URL</code> en el código y vuelve a publicar el HTML — así todos los docentes quedan conectados sin tocar nada.
+          </p>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+            <input type="text" id="gas-url-input" style="flex:1;min-width:280px" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <button class="btn sm grn" onclick="saveGasUrl()">💾 Guardar y probar</button>
+            <button class="btn sm out" onclick="clearGasUrl()">🗑 Borrar</button>
+          </div>
+          <div id="gas-url-status" style="font-size:.8rem;margin-top:.7rem;min-height:1.2rem;white-space:pre-wrap;line-height:1.6"></div>
+
+          <div style="margin-top:1.1rem;border-top:1px solid var(--bord);padding-top:1rem">
+            <div style="font-size:.78rem;font-weight:700;color:var(--acc2);margin-bottom:.5rem">📄 Spreadsheet ID (solo si necesitas cambiarlo)</div>
+            <p style="color:var(--txt2);font-size:.8rem;margin-bottom:.7rem;line-height:1.6">
+              Si el Google Sheet actual se borró o cambió, pega aquí el ID del nuevo (la parte entre <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">/d/</code> y <code style="background:var(--surf2);padding:.1rem .35rem;border-radius:4px">/edit</code> en su URL). Esto actualiza el script directamente — no necesitas volver a editar código.
+            </p>
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+              <input type="text" id="sheet-id-input" style="flex:1;min-width:280px" placeholder="ID del Google Sheet">
+              <button class="btn sm pur" onclick="saveSheetId()">💾 Guardar Spreadsheet ID</button>
+            </div>
+            <div id="sheet-id-status" style="font-size:.8rem;margin-top:.7rem;min-height:1.2rem;white-space:pre-wrap;line-height:1.6"></div>
+          </div>
+        </div>
+
+      </div>
+    </details>
 
     <!-- Diagnóstico de conexión -->
     <div class="admin-panel">
