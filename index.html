@@ -797,8 +797,8 @@ tbody tr.new-row td{animation:rowflash .9s ease}
       <div class="sb-bottom">
         <button class="btn sm grn" onclick="goAnalysis()" style="width:100%">📊 Ver Análisis →</button>
         <button class="btn sm" id="btn-import-excel" onclick="openExcelImport()" style="width:100%;background:var(--acc3);color:#fff">📥 Importar Excel</button>
-        <button class="btn sm sky" onclick="exportJSON()" style="width:100%">💾 Exportar JSON</button>
-        <button class="btn sm" onclick="idxSyncPush(false)" style="width:100%;background:var(--sup);color:#111">☁️ Sync Sheets</button>
+        <button class="btn sm sky" id="btn-export-json" onclick="exportJSON()" style="width:100%">💾 Exportar JSON</button>
+        <button class="btn sm" id="btn-sync-sheets" onclick="idxSyncPush(false)" style="width:100%;background:var(--sup);color:#111">☁️ Sync Sheets</button>
       </div>
     </div>
     <div class="emain">
@@ -850,8 +850,8 @@ tbody tr.new-row td{animation:rowflash .9s ease}
   <div class="xbar">
     <span class="xmeta" id="xbar-meta"></span>
     <span class="save-ok" id="save-ok">✓ Guardado</span>
-    <button class="btn sm sky" onclick="exportJSON()">💾 Exportar JSON</button>
-    <button class="btn sm" onclick="idxSyncPush(false)" style="background:var(--sup);color:#111">☁️ Sync Sheets</button>
+    <button class="btn sm sky" id="btn-export-json-a" onclick="exportJSON()">💾 Exportar JSON</button>
+    <button class="btn sm" id="btn-sync-sheets-a" onclick="idxSyncPush(false)" style="background:var(--sup);color:#111">☁️ Sync Sheets</button>
     <button class="btn sm out" onclick="showEntry()">✏️ Editar datos</button>
     <button class="btn sm" onclick="window.print()">🖨 Imprimir</button>
   </div>
@@ -1837,6 +1837,8 @@ function buildEntryUI(){
   document.getElementById('btn-add-course').style.display   = isAdmin?'':'none';
   document.getElementById('btn-import-excel').style.display = isAdmin?'':'none';
   document.getElementById('btn-del-course').style.display   = isAdmin?'':'none';
+  document.getElementById('btn-export-json').style.display  = isAdmin?'':'none';
+  document.getElementById('btn-sync-sheets').style.display  = isAdmin?'':'none';
   document.getElementById('doc-inst-banner').style.display  = isAdmin?'none':'flex';
   const gSel=document.getElementById('doc-grado-sel');
   const gLbl=document.getElementById('doc-grado-lbl');
@@ -2393,6 +2395,8 @@ function buildAnalysis(){
   document.getElementById('anav').innerHTML=tabs.map(t=>`<div class="anavt ${ST.activeAnalysisTab===t.id?'on':''}" onclick="switchTab('${t.id}',this)">${t.lbl}</div>`).join('');
   const total=ST.sems.flatMap(s=>getAll(s)).length;
   document.getElementById('xbar-meta').textContent=`${GN[ST.grado]} · ${ST.year} · ${ST.sems.map(s=>SEM_LABEL[s]).join(' + ')} · ${total} registros`;
+  document.getElementById('btn-export-json-a').style.display=CURRENT_ROLE==='admin'?'':'none';
+  document.getElementById('btn-sync-sheets-a').style.display=CURRENT_ROLE==='admin'?'':'none';
   renderTab(ST.activeAnalysisTab);
 }
 function switchTab(id,el){
