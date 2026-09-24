@@ -808,8 +808,8 @@ tbody tr.new-row td{animation:rowflash .9s ease}
       <div class="etop">
         <h2 id="entry-hd">Curso</h2>
         <button class="btn sm out" onclick="sortAlpha()">🔤 A→Z</button>
-        <button class="btn sm out" onclick="document.getElementById('m-paste').classList.add('on')">📋 Pegar lista</button>
-        <button class="btn sm" onclick="addBlankRow()">＋ Estudiante</button>
+        <button class="btn sm out" id="btn-paste-list" onclick="document.getElementById('m-paste').classList.add('on')">📋 Pegar lista</button>
+        <button class="btn sm" id="btn-add-student" onclick="addBlankRow()">＋ Estudiante</button>
         <button class="btn sm red" id="btn-del-course" onclick="delCourse()">🗑 Curso</button>
       </div>
       <div class="tbl-wrap">
@@ -834,7 +834,7 @@ tbody tr.new-row td{animation:rowflash .9s ease}
           <tbody id="entry-tbody"></tbody>
         </table>
       </div>
-      <div class="addrow">
+      <div class="addrow" id="row-add-student">
         <input type="text" id="new-name" placeholder="Apellidos y nombres del estudiante..."
                onkeydown="if(event.key==='Enter')addNamed()">
         <button class="btn sm" onclick="addNamed()">＋ Agregar</button>
@@ -1839,6 +1839,9 @@ function buildEntryUI(){
   document.getElementById('btn-del-course').style.display   = isAdmin?'':'none';
   document.getElementById('btn-export-json').style.display  = isAdmin?'':'none';
   document.getElementById('btn-sync-sheets').style.display  = isAdmin?'':'none';
+  document.getElementById('btn-paste-list').style.display   = isAdmin?'':'none';
+  document.getElementById('btn-add-student').style.display  = isAdmin?'':'none';
+  document.getElementById('row-add-student').style.display  = isAdmin?'':'none';
   document.getElementById('doc-inst-banner').style.display  = isAdmin?'none':'flex';
   const gSel=document.getElementById('doc-grado-sel');
   const gLbl=document.getElementById('doc-grado-lbl');
@@ -2238,8 +2241,8 @@ function renderTbody(){
     <td><div class="ra">
       <button class="ib" onclick="mvS('${sem}','${c}',${i},-1)" title="Subir">↑</button>
       <button class="ib" onclick="mvS('${sem}','${c}',${i},1)"  title="Bajar">↓</button>
-      ${CURRENT_ROLE==='admin'?`<button class="ib" onclick="moveToC('${sem}','${c}',${i})" title="Mover a otro curso">🔀</button>`:''}
-      <button class="ib" onclick="rmS('${sem}','${c}',${i})"   title="Eliminar">🗑</button>
+      ${CURRENT_ROLE==='admin'?`<button class="ib" onclick="moveToC('${sem}','${c}',${i})" title="Mover a otro curso">🔀</button>
+      <button class="ib" onclick="rmS('${sem}','${c}',${i})" title="Eliminar">🗑</button>`:''}
     </div></td>
   </tr>`).join('');
 }
@@ -2249,6 +2252,7 @@ function isDup(nombre){const arr=ST.data[ST.activeSem]?.[ST.activeCourse]||[];re
 function blankSt(){const s={nombre:''};AREAS.forEach(a=>{s[a.c1]='';s[a.c2]='';});return s;}
 function mvS(sem,c,i,d){const a=ST.data[sem][c];const n=i+d;if(n<0||n>=a.length)return;[a[i],a[n]]=[a[n],a[i]];autoSave();renderTbody();}
 function rmS(sem,c,i){
+  if(CURRENT_ROLE!=='admin'){toast('Solo el administrador elimina estudiantes.','warn');return;}
   const nom=ST.data[sem][c][i].nombre||'este estudiante';
   if(!confirm(`¿Eliminar a ${nom}?`))return;
   ST.data[sem][c].splice(i,1);autoSave();buildTable();
@@ -2291,6 +2295,7 @@ function moveToC(sem,c,i){
   toast(`${nombre} movido a Curso ${destino}.`+(movedOther?` (también en ${SEM_LABEL[otroSem]})`:''),'ok',4000);
 }
 function addBlankRow(){
+  if(CURRENT_ROLE!=='admin'){toast('Solo el administrador agrega estudiantes.','warn');return;}
   if(!ST.activeCourse){toast('Selecciona un curso primero.','warn');return;}
   ST.data[ST.activeSem][ST.activeCourse].push(blankSt());
   autoSave();buildTable();
@@ -2298,6 +2303,7 @@ function addBlankRow(){
   if(last){last.classList.add('new-row');last.scrollIntoView({behavior:'smooth',block:'nearest'});}
 }
 function addNamed(){
+  if(CURRENT_ROLE!=='admin'){toast('Solo el administrador agrega estudiantes.','warn');return;}
   const inp=document.getElementById('new-name');
   const n=inp.value.trim().toUpperCase();
   if(!n)return;
@@ -2310,6 +2316,7 @@ function addNamed(){
   if(last){last.classList.add('new-row');last.scrollIntoView({behavior:'smooth',block:'nearest'});}
 }
 function processPaste(){
+  if(CURRENT_ROLE!=='admin'){toast('Solo el administrador agrega estudiantes.','warn');return;}
   const lines=document.getElementById('paste-ta').value.trim().split('\n').map(l=>normName(l)).filter(l=>l.length>2);
   if(!ST.activeCourse){toast('Selecciona un curso.','warn');return;}
   const arr=ST.data[ST.activeSem][ST.activeCourse];
