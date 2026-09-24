@@ -627,6 +627,15 @@ tbody tr.new-row td{animation:rowflash .9s ease}
       </div>
     </div>
 
+    <!-- Crear Segundo Semestre -->
+    <div class="admin-panel">
+      <h3>🗓️ Crear Segundo Semestre</h3>
+      <p style="color:var(--txt2);font-size:.83rem;margin-bottom:1rem;line-height:1.6">
+        Abre el Segundo Semestre en todos los grados/niveles de una sola vez, copiando los mismos cursos y estudiantes de Primer Semestre con los desempeños en blanco — así cada docente entra y registra directamente sus resultados, sin depender de un Excel. Los espacios que ya tengan Segundo Semestre creado no se tocan.
+      </p>
+      <button class="btn sm grn" onclick="adminCrearSegundoSemestre()">🗓️ Crear Segundo Semestre (todos los niveles)</button>
+    </div>
+
     <!-- Reinicio anual -->
     <div class="admin-panel">
       <h3>🧹 Reiniciar para un nuevo año</h3>
@@ -2220,6 +2229,7 @@ function renderTbody(){
     <td><div class="ra">
       <button class="ib" onclick="mvS('${sem}','${c}',${i},-1)" title="Subir">↑</button>
       <button class="ib" onclick="mvS('${sem}','${c}',${i},1)"  title="Bajar">↓</button>
+      ${CURRENT_ROLE==='admin'?`<button class="ib" onclick="moveToC('${sem}','${c}',${i})" title="Mover a otro curso">🔀</button>`:''}
       <button class="ib" onclick="rmS('${sem}','${c}',${i})"   title="Eliminar">🗑</button>
     </div></td>
   </tr>`).join('');
@@ -2233,6 +2243,43 @@ function rmS(sem,c,i){
   const nom=ST.data[sem][c][i].nombre||'este estudiante';
   if(!confirm(`¿Eliminar a ${nom}?`))return;
   ST.data[sem][c].splice(i,1);autoSave();buildTable();
+}
+// Mueve un estudiante a otro curso del mismo grado, conservando sus
+// desempeños ya registrados. Si el mismo estudiante (por nombre) también
+// está en el otro semestre bajo el curso de origen, se mueve ahí también
+// — un cambio de salón aplica al año completo, no solo al semestre que
+// se esté viendo en pantalla.
+function moveToC(sem,c,i){
+  if(CURRENT_ROLE!=='admin'){toast('Solo el administrador mueve estudiantes entre cursos.','warn');return;}
+  const st=ST.data[sem][c][i];
+  const nombre=st.nombre||'este estudiante';
+  const destinos=Object.keys(ST.data[sem]).filter(k=>k!==c);
+  if(!destinos.length){toast('No hay otro curso en este semestre para mover.','warn');return;}
+  const opciones=destinos.map((k,idx)=>`${idx+1}. Curso ${k} (${ST.data[sem][k].length})`).join('\n');
+  const sel=prompt(`Mover a "${nombre}" de Curso ${c} a:\n\n${opciones}\n\nEscribe el número:`);
+  const idx=parseInt(sel)-1;
+  if(isNaN(idx)||idx<0||idx>=destinos.length)return;
+  const destino=destinos[idx];
+  if(!confirm(`¿Mover a ${nombre} de Curso ${c} a Curso ${destino}?\n\nSus desempeños ya registrados se conservan.`))return;
+
+  ST.data[sem][c].splice(i,1);
+  ST.data[sem][destino].push(st);
+
+  let movedOther=false;
+  const otroSem=sem==='S1'?'S2':'S1';
+  if(ST.sems.includes(otroSem)&&ST.data[otroSem]?.[c]){
+    const arr2=ST.data[otroSem][c];
+    const idx2=arr2.findIndex(e=>normName(e.nombre)===normName(nombre));
+    if(idx2>=0){
+      if(!ST.data[otroSem][destino])ST.data[otroSem][destino]=[];
+      const[moved]=arr2.splice(idx2,1);
+      ST.data[otroSem][destino].push(moved);
+      movedOther=true;
+    }
+  }
+
+  autoSave();buildCourseList();buildTable();
+  toast(`${nombre} movido a Curso ${destino}.`+(movedOther?` (también en ${SEM_LABEL[otroSem]})`:''),'ok',4000);
 }
 function addBlankRow(){
   if(!ST.activeCourse){toast('Selecciona un curso primero.','warn');return;}
@@ -3144,6 +3191,44 @@ function adminExportConsolidated(scope){
   const a=document.createElement('a');a.href=URL.createObjectURL(b);
   a.download=`PruebasSemestrales_Consolidado_${scopeLabel}_${new Date().getFullYear()}.json`;a.click();
   toast(`Consolidado exportado: ${Object.keys(consolidated.grados).length} grados, ${totalEst} estudiantes.`,'ok',4000);
+}
+
+// ─── Crear Segundo Semestre en todos los espacios (copia cursos y
+//     estudiantes de S1 con desempeños en blanco, para que cada docente
+//     los registre directamente — reemplaza el flujo antiguo por Excel) ──
+function adminCrearSegundoSemestre(){
+  const keys=Object.keys(IDX.grados||{}).sort();
+  if(!keys.length){toast('No hay espacios institucionales todavía.','warn');return;}
+  const pendientes=keys.filter(k=>!(IDX.grados[k].sems||[]).includes('S2'));
+  if(!pendientes.length){toast('Todos los espacios ya tienen Segundo Semestre creado.','info');return;}
+  const resumen=pendientes.map(k=>{
+    const sp=IDX.grados[k];
+    return `Grado ${GN[sp.grado]} · ${sp.year} (${k})`;
+  }).join('\n');
+  if(!confirm(`¿Crear el Segundo Semestre en ${pendientes.length} espacio(s)?\n\n${resumen}\n\nSe copiarán los mismos cursos y estudiantes de Primer Semestre, con los desempeños en blanco para que cada docente los registre directamente.\n\nLos espacios que ya tienen Segundo Semestre no se tocan.`))return;
+
+  let totalEst=0;
+  pendientes.forEach(k=>{
+    const sp=IDX.grados[k];
+    const s2={};
+    Object.entries(sp.data.S1||{}).forEach(([curso,estudiantes])=>{
+      s2[curso]=estudiantes.map(e=>{
+        const nuevo={nombre:e.nombre};
+        AREAS.forEach(a=>{nuevo[a.c1]='';nuevo[a.c2]='';});
+        totalEst++;
+        return nuevo;
+      });
+    });
+    sp.data.S2=s2;
+    if(!sp.sems.includes('S2'))sp.sems.push('S2');
+    if(!sp.analysis)sp.analysis={S1:{},S2:{},CMP:{},FINAL:{}};
+    if(!sp.analysis.S2)sp.analysis.S2={};
+  });
+
+  idxAutoSave();
+  idxSyncPush(false);
+  toast(`Segundo Semestre creado en ${pendientes.length} espacio(s) · ${totalEst} estudiante(s) listos para registrar.`,'ok',5500);
+  adminLoadSpaces();
 }
 
 // ─── Reinicio anual (vacía desempeños, conserva estructura) ─────────
