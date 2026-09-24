@@ -1255,7 +1255,16 @@ const FIREBASE_CONFIG_KEY='ps_firebase_config_v1';
 // puedes pegarla aquí directamente (reemplazando `null`) para que quede
 // "de fábrica" para todos los docentes, igual que DEFAULT_GAS_URL — así
 // nadie más tiene que configurarla a mano.
-const DEFAULT_FIREBASE_CONFIG=null;
+const DEFAULT_FIREBASE_CONFIG={
+  apiKey: "AIzaSyDn_HVx8gRx4JiSd1pSsvzFAwlppNoHy9I",
+  authDomain: "pruebas-semestrales-ju.firebaseapp.com",
+  databaseURL: "https://pruebas-semestrales-ju-default-rtdb.firebaseio.com",
+  projectId: "pruebas-semestrales-ju",
+  storageBucket: "pruebas-semestrales-ju.firebasestorage.app",
+  messagingSenderId: "269847864910",
+  appId: "1:269847864910:web:ddf4dea89b19f0982ec51f",
+  measurementId: "G-BB31C2EGQ8"
+};
 let FIREBASE_CONFIG=(function(){
   try{
     const s=localStorage.getItem(FIREBASE_CONFIG_KEY);
