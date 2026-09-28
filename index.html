@@ -1885,7 +1885,7 @@ async function _docenteEnter(){
   // 2. Elegir el primer espacio disponible por defecto
   const firstKey=keys.sort()[0];
   const sp=IDX.grados[firstKey];
-  _loadSpaceIntoST(sp);
+  _loadSpaceIntoST(sp,{preferS2:true});
   showEntry();
 }
 
@@ -1900,16 +1900,18 @@ function docenteFillGradoSelect(){
 function docenteChangeGrado(){
   const k=document.getElementById('doc-grado-sel').value;
   const sp=IDX.grados[k];
-  if(sp){_loadSpaceIntoST(sp);buildEntry();}
+  if(sp){_loadSpaceIntoST(sp,{preferS2:true});buildEntry();}
 }
 
-function _loadSpaceIntoST(sp){
+function _loadSpaceIntoST(sp,opts){
+  const preferS2=!!(opts&&opts.preferS2)&&sp.sems.includes('S2');
+  const sem=preferS2?'S2':sp.sems[0];
   ST={
     _version:FILE_VERSION,inst:IDX.inst,
     grado:sp.grado,year:sp.year,sems:sp.sems,
-    activeSem:sp.sems[0],
-    activeCourse:Object.keys(sp.data[sp.sems[0]]||{})[0]||null,
-    activeAnalysisTab:'resumen',
+    activeSem:sem,
+    activeCourse:Object.keys(sp.data[sem]||{})[0]||null,
+    activeAnalysisTab:preferS2?'s2':'resumen',
     data:sp.data,analysis:sp.analysis,competencias:sp.competencias,
   };
   updateTB();
