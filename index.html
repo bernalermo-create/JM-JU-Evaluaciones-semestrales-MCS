@@ -1859,13 +1859,18 @@ async function _docenteEnter(){
   // todavía — para no pisar datos ya actualizados en vivo con una copia
   // de respaldo posiblemente más vieja.
   if(!IDX.grados||!Object.keys(IDX.grados).length){
-    const remote=await idxSyncLoad();
-    if(remote){IDX=remote;_idxDirty=false;}
-    else{
-      try{
-        const local=JSON.parse(localStorage.getItem(IDX_LOCAL_KEY));
-        if(local&&local.grados){IDX=local;toast('Mostrando datos locales (sin conexión).','info',3000);}
-      }catch{}
+    if(_fbPendingRemote){
+      _fbApplyRemote(_fbPendingRemote);
+      _fbPendingRemote=null;
+    }else{
+      const remote=await idxSyncLoad();
+      if(remote){IDX=remote;_idxDirty=false;}
+      else{
+        try{
+          const local=JSON.parse(localStorage.getItem(IDX_LOCAL_KEY));
+          if(local&&local.grados){IDX=local;toast('Mostrando datos locales (sin conexión).','info',3000);}
+        }catch{}
+      }
     }
   }
 
