@@ -3294,15 +3294,25 @@ async function init(){
     // configurado, se usa como respaldo por si Firebase aún no tiene nada).
     await new Promise(r=>setTimeout(r,600));
   }
-  if((!IDX.grados||!Object.keys(IDX.grados).length)&&hasGasUrl()){
-    syncBadge('off','Sheets (respaldo)');
-    const remote=await idxSyncLoad();
-    if(remote){
-      IDX=remote;
-      // Si Firebase está configurado pero todavía no tenía datos, se
-      // aprovecha para sembrarlo con lo que había en Sheets.
-      if(hasFirebaseConfig()&&_fbDb){
-        try{ const snap=await _fbDb.ref('ps_index').once('value'); if(!snap.exists())await _fbDb.ref('ps_index').set(remote); }catch{}
+  if(!IDX.grados||!Object.keys(IDX.grados).length){
+    // Si Firebase ya trajo un dato pero quedó pospuesto (por ejemplo,
+    // porque llegó mientras la pantalla de login seguía abierta), ese
+    // dato es más confiable que el respaldo de Sheets — se aplica antes
+    // de recurrir a Sheets, para no pisar datos en vivo con un respaldo
+    // potencialmente desactualizado.
+    if(_fbPendingRemote){
+      _fbApplyRemote(_fbPendingRemote);
+      _fbPendingRemote=null;
+    }else if(hasGasUrl()){
+      syncBadge('off','Sheets (respaldo)');
+      const remote=await idxSyncLoad();
+      if(remote){
+        IDX=remote;
+        // Si Firebase está configurado pero todavía no tenía datos, se
+        // aprovecha para sembrarlo con lo que había en Sheets.
+        if(hasFirebaseConfig()&&_fbDb){
+          try{ const snap=await _fbDb.ref('ps_index').once('value'); if(!snap.exists())await _fbDb.ref('ps_index').set(remote); }catch{}
+        }
       }
     }
   }
@@ -3331,6 +3341,10 @@ async function init(){
   // al volver a la pestaña/ventana.
   function _onRegainFocus(){
     _syncLog('ventana recuperó el foco');
+    if(_fbPendingRemote&&_safeToRefresh()){
+      _fbApplyRemote(_fbPendingRemote);
+      _fbPendingRemote=null;
+    }
     if(hasGasUrl()&&_hasUnsentChanges())idxSyncPush(false);
     _presencePoll();
   }
